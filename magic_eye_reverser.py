@@ -61,7 +61,7 @@ def generate_shift_diffs(image, min_shift, max_shift):
     return diffs
 
 
-def process_diffs(diff_images, patch_radius=5):
+def process_diffs(diff_images, patch_radius=3):
     print('Processing diff images...')
     for index, diff_image in enumerate(diff_images):
         progress = (index+1) / len(diff_images) * 100
