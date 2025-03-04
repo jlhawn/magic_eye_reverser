@@ -141,6 +141,8 @@ def select_diff(diff_images, window_name="Shift Selector", trackbar_name="Shift"
 def reverse_magic_eye(input_filename, output_filename):
     # Load the Magic Eye image
     magic_eye_img = cv2.imread(input_filename, cv2.IMREAD_GRAYSCALE)
+    if magic_eye_img is None:
+        raise FileNotFoundError(input_filename)
 
     height, width = magic_eye_img.shape
 
@@ -210,6 +212,8 @@ def reverse_magic_eye(input_filename, output_filename):
 
 def process_magic_eye_dir(dir_path):
     magic_eye_path = os.path.join(dir_path, "magic_eye.jpg")
+    if not os.path.exists(magic_eye_path):
+        magic_eye_path = os.path.join(dir_path, "magic_eye.png")
     depth_map_path = os.path.join(dir_path, "depth_map.png")
     
     print(f'\nProcessing {dir_path}...\n')
