@@ -163,14 +163,13 @@ def reverse_magic_eye(input_filename, output_filename):
     max_index = select_diff(diff_images, f"{input_filename} - Max Shift Selector", "Max Shift")
     diff_images = diff_images[:max_index+1]
 
-    print(f'min_index = {min_index}, max_index={max_index}')
-
-    min_shift = min_possible_shift + min_index
-
     print('Building Output Depth Map...')
 
+    min_shift = min_possible_shift + min_index
+    field_width = width - min_shift
+
     # Initialize depth map
-    depth_map = np.zeros((height, width - min_shift), dtype=np.uint8)
+    depth_map = np.zeros((height, field_width), dtype=np.uint8)
 
     window_name = "Depth Map"
     for y in range(height):
@@ -178,7 +177,7 @@ def reverse_magic_eye(input_filename, output_filename):
         sys.stdout.write(f'\r    Progress: {progress:.2f}%')
         sys.stdout.flush()
         
-        for x in range(width - min_shift):
+        for x in range(field_width):
             min_diff_val = float("inf")
             best_index = None
 
