@@ -138,7 +138,7 @@ def select_diff(diff_images, window_name="Shift Selector", trackbar_name="Shift"
     return current_index
 
 
-def reverse_magic_eye(input_filename, output_filename):
+def reverse_magic_eye(input_filename, output_filename, min_diff_threshold=40):
     # Load the Magic Eye image
     magic_eye_img = cv2.imread(input_filename, cv2.IMREAD_GRAYSCALE)
     if magic_eye_img is None:
@@ -148,8 +148,6 @@ def reverse_magic_eye(input_filename, output_filename):
 
     min_possible_shift = width // 20
     max_possible_shift = width // 2
-
-    mean_diff_threshold = 25
 
     time.sleep(0.5)
 
@@ -188,7 +186,7 @@ def reverse_magic_eye(input_filename, output_filename):
 
                 diff_val = diff_image[y, shifted_x]
 
-                if diff_val < mean_diff_threshold and diff_val < min_diff_val:
+                if diff_val < min_diff_threshold and diff_val < min_diff_val:
                     min_diff_val = diff_val
                     best_index = index
 
