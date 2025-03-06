@@ -10,7 +10,7 @@ This Python program processes "Magic Eye" stereograms to generate depth maps. It
 - Generates and saves depth maps as `depth_map.png`.
 - Input images do not need to be grayscale; the program will handle color images as well.
 
-![3D Apple Grayscale Depth Map](./puzzles/apple/depth_map.png)
+![3D Apple Grayscale Depth Map](./puzzles/cat_and_mouse/depth_map.png)
 
 ## Installation
 
@@ -29,9 +29,9 @@ This Python program processes "Magic Eye" stereograms to generate depth maps. It
 
 ### Process a single Magic Eye image
 ```sh
-python magic_eye_reverser.py puzzles/apple
+python magic_eye_reverser.py puzzles/cat_and_mouse
 ```
-This will process the `magic_eye.jpg` inside `puzzles/apple/` and generate `depth_map.png`.
+This will process the `magic_eye.jpg` inside `puzzles/cat_and_mouse/` and generate `depth_map.png`.
 
 ### Process all Magic Eye images in the `puzzles` directory
 ```sh
@@ -43,7 +43,7 @@ This will process all subdirectories inside `puzzles/`, generating depth maps.
 ```
 project-root/
 │── puzzles/
-│   ├── apple/
+│   ├── cat_and_mouse/
 │   │   ├── magic_eye.jpg
 │   ├── cat_dunk/
 │   │   ├── magic_eye.jpg
@@ -72,7 +72,7 @@ pip install -r requirements.txt
    - Loading `magic_eye.jpg`.
    - Computing self-shifted image diffs.
    - Allowing the user to select which shift amount marks the closest point in the 3D model/scene and the furthest point (often a background). The model contours appear as black areas in the diff image.
-     ![Screenshot of max shift selection process](./screenshot.png)
+     ![Animaed GIF of shift selection process](./puzzles/cat_and_mouse/scrub.gif)
    - Selecting which shift offset from the chosen range minimizes the difference for each pixel in the image. The minimal difference shift corresponds to the shift where that pixel appears darkest.
    - Normalizing the pixel depths, where white represents the closest points and black represents the furthest points.
    - Saving the depth map as `depth_map.png`.
