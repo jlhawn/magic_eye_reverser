@@ -2,13 +2,11 @@
 
 import os
 import sys
-import time
 
 import cv2
 import numpy as np
-import matplotlib.pyplot as plt
-import skimage.filters.rank as rank
-# import skimage.morphology as morphology
+import PIL.Image
+import subprocess
 
 
 def lerp(n, a, b, x, y, clamp=True):
@@ -32,6 +30,11 @@ def display_img(image, window_name="Image", blocking=False):
         except KeyboardInterrupt:
             pass
         cv2.destroyWindow(window_name)
+
+
+def left_trim_image(image, N=0):
+    # Excludes the first N pixel columns.
+    return image[:, N:]
 
 
 def right_trim_image(image, N=0):
@@ -138,7 +141,39 @@ def select_diff(diff_images, window_name="Shift Selector", trackbar_name="Shift"
     return current_index
 
 
-def reverse_magic_eye(input_filename, output_filename, min_diff_threshold=40):
+def optimize_gif(gif_filename):
+    """Optimize GIF using gifsicle."""
+    try:
+        subprocess.run(["gifsicle", "-O3", "--lossy=2000", gif_filename, "-o", gif_filename], check=True)
+        print(f"Optimized GIF saved as {gif_filename}")
+    except FileNotFoundError:
+        print("gifsicle not found! Install it or use another optimization method.")
+
+
+def generate_animated_gif(diff_images, output_filename="scrub.gif", width=400):
+    """
+    Generate an animated GIF looping forward and backward through the difference images.
+    """
+    resized_diff_images = []
+    for i, img in enumerate(diff_images):
+        # Resize image while maintaining aspect ratio
+        height, original_width = img.shape
+        new_height = int(height * (width / original_width))
+        resized_diff_images.append(cv2.resize(img, (width, new_height), interpolation=cv2.INTER_LINEAR))
+
+    frames = []
+    for resized_img in resized_diff_images + resized_diff_images[::-1]: # Loop forward and backward
+        # Convert to PIL image
+        pil_img = PIL.Image.fromarray(resized_img).convert('L')
+        frames.append(pil_img)
+    
+    # Save as GIF with looping
+    frames[0].save(output_filename, save_all=True, append_images=frames[1:], loop=0, disposal=2, duration=100, optimize=True)
+    print(f"Animated GIF saved as {output_filename}")
+    optimize_gif(output_filename)
+
+
+def reverse_magic_eye(input_filename, depthmap_filename, scrub_gif_filename, min_diff_threshold=40):
     # Load the Magic Eye image
     magic_eye_img = cv2.imread(input_filename, cv2.IMREAD_GRAYSCALE)
     if magic_eye_img is None:
@@ -148,8 +183,6 @@ def reverse_magic_eye(input_filename, output_filename, min_diff_threshold=40):
 
     min_possible_shift = width // 20
     max_possible_shift = width // 2
-
-    time.sleep(0.5)
 
     diff_images = generate_shift_diffs(magic_eye_img, min_possible_shift, max_possible_shift)
 
@@ -164,6 +197,9 @@ def reverse_magic_eye(input_filename, output_filename, min_diff_threshold=40):
     print('Building Output Depth Map...')
 
     min_shift = min_possible_shift + min_index
+    for i, diff_image in enumerate(diff_images):
+        diff_images[i] = left_trim_image(diff_image, N=min_shift)
+
     field_width = width - min_shift
 
     # Initialize depth map
@@ -180,8 +216,8 @@ def reverse_magic_eye(input_filename, output_filename, min_diff_threshold=40):
             best_index = None
 
             for index, diff_image in enumerate(diff_images):
-                shifted_x = x + min_shift + index
-                if shifted_x >= width:
+                shifted_x = x + index
+                if shifted_x >= field_width:
                     break # This pixel was shifted out of bounds.
 
                 diff_val = diff_image[y, shifted_x]
@@ -202,9 +238,11 @@ def reverse_magic_eye(input_filename, output_filename, min_diff_threshold=40):
     depth_map = normalize_image(depth_map)
 
     # Save the depth map
-    cv2.imwrite(output_filename, depth_map)
+    cv2.imwrite(depthmap_filename, depth_map)
 
-    print(f"\nDepth map saved as {output_filename}")
+    print(f"\nDepth map saved as {depthmap_filename}")
+
+    generate_animated_gif(diff_images, scrub_gif_filename)
 
 
 def process_magic_eye_dir(dir_path):
@@ -212,9 +250,10 @@ def process_magic_eye_dir(dir_path):
     if not os.path.exists(magic_eye_path):
         magic_eye_path = os.path.join(dir_path, "magic_eye.png")
     depth_map_path = os.path.join(dir_path, "depth_map.png")
+    scrub_gif_path = os.path.join(dir_path, "scrub.gif")
     
     print(f'\nProcessing {dir_path}...\n')
-    reverse_magic_eye(magic_eye_path, depth_map_path)
+    reverse_magic_eye(magic_eye_path, depth_map_path, scrub_gif_path)
 
 
 def process_magic_eye_images(base_directory):
